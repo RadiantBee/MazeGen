@@ -1,4 +1,4 @@
-local function entry(x, y, width, height)
+local function entry(x, y, width, height, onEnterFunc, onEnterFuncArgs)
 	return {
 		text = "",
 		active = false,
@@ -7,6 +7,12 @@ local function entry(x, y, width, height)
 		y = y or 0,
 		width = width or 100,
 		height = height or 20,
+
+		onEnterFunc = onEnterFunc or function()
+			print("No onEnter function")
+		end,
+
+		onEnterFuncArgs = onEnterFuncArgs,
 
 		textX = 0,
 		textY = 0,
@@ -30,13 +36,29 @@ local function entry(x, y, width, height)
 		onKeyboardPress = function(self, key)
 			if self.active then
 				if key:len() == 1 then
-					self.text = self.text .. key
+					if love.keyboard.isDown("lctrl") then
+						if key == "c" then
+							love.system.setClipboardText(self.text)
+						elseif key == "v" then
+							self.text = self.text .. love.system.getClipboardText()
+						end
+					elseif love.keyboard.isDown("lshift") then
+						self.text = self.text .. string.upper(key)
+					else
+						self.text = self.text .. key
+					end
 				elseif key == "space" then
 					self.text = self.text .. " "
 				elseif key == "backspace" then
 					self.text = self.text:sub(1, -2)
 				elseif key == "lalt" then
 					self.text = ""
+				elseif key == "return" then
+					if self.onEnterFuncArgs then
+						self.onEnterFunc(self.onEnterFuncArgs)
+					else
+						self.onEnterFunc()
+					end
 				end
 			end
 		end,
